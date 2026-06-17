@@ -164,25 +164,28 @@
   // --------------------------------------------------------
   // HERO 3D ENTRANCE ANIMATION (Aggressive Fly-In)
   // --------------------------------------------------------
-  window.addEventListener('load', () => {
-    // Hide initially to prevent FOUC before JS loads
-    gsap.fromTo('.hero-badge, .hero-title, .hero-tagline, .hero-tagline-hi, .hero-desc, .hero-actions, .hero-stats', 
-      { 
-        z: 1500, // Start way in front of the screen
-        scale: 4, 
-        opacity: 0, 
-        transformPerspective: 1500 
-      },
-      {
-        z: 0,
-        scale: 1,
-        opacity: 1,
-        duration: 1.2,
-        stagger: 0.1,
-        ease: "expo.out"
-      }
-    );
-  });
+  // Run immediately to prevent FOUC and guarantee 3D effect
+  gsap.fromTo('.hero-badge, .hero-title, .hero-tagline, .hero-tagline-hi, .hero-desc, .hero-actions, .hero-stats', 
+    { 
+      z: 1500, // Start way in front of the screen
+      y: -200, // Fly down
+      rotationX: -60, // Flipped backwards
+      scale: 3, 
+      opacity: 0, 
+      transformPerspective: 1000 
+    },
+    {
+      z: 0,
+      y: 0,
+      rotationX: 0,
+      scale: 1,
+      opacity: 1,
+      duration: 1.6,
+      stagger: 0.1,
+      ease: "power4.out",
+      delay: 0.2
+    }
+  );
 
   // --------------------------------------------------------
   // GSAP SCROLL REVEAL - "CARD DEALING" ANAMORPHIC EFFECT
