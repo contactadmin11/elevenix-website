@@ -14,8 +14,15 @@
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
-  camera.position.set(0, 0, 6);
+  const aspect = window.innerWidth / window.innerHeight;
+  const d = 12; // Frustum size
+  const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 1000);
+  camera.position.set(20, 20, 20); // Isometric angle
+  camera.lookAt(scene.position);
+
+  // Enable Shadows
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   // Colours
   const C_GOLD     = new THREE.Color(0xD4AF37);
@@ -23,124 +30,85 @@
   const C_WHITE    = new THREE.Color(0xFFFFFF);
   const C_DIM      = new THREE.Color(0x333333);
 
-  // ---- STAR / PARTICLE FIELD ----
-  const STAR_COUNT = 4000;
-  const starPos    = new Float32Array(STAR_COUNT * 3);
-  const starColor  = new Float32Array(STAR_COUNT * 3);
-  const starSize   = new Float32Array(STAR_COUNT);
+  // ---- ISOMETRIC FACTORY SCENE ----
+  const factoryGroup = new THREE.Group();
+  scene.add(factoryGroup);
 
-  for (let i = 0; i < STAR_COUNT; i++) {
-    // Spread in a large sphere
-    const theta = Math.random() * Math.PI * 2;
-    const phi   = Math.acos(2 * Math.random() - 1);
-    const r     = 10 + Math.random() * 60;
-    starPos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
-    starPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-    starPos[i * 3 + 2] = r * Math.cos(phi);
+  // Floor plane (receives shadows)
+  const floorGeo = new THREE.PlaneGeometry(200, 200);
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x0A0F1C, roughness: 0.1, metalness: 0.1 });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -4;
+  floor.receiveShadow = true;
+  factoryGroup.add(floor);
 
-    // Color: 30% gold, rest white/dim
-    const roll = Math.random();
-    if (roll > 0.75) {
-      starColor[i * 3] = C_GOLD.r; starColor[i * 3 + 1] = C_GOLD.g; starColor[i * 3 + 2] = C_GOLD.b;
-    } else if (roll > 0.55) {
-      starColor[i * 3] = C_GOLD_L.r; starColor[i * 3 + 1] = C_GOLD_L.g; starColor[i * 3 + 2] = C_GOLD_L.b;
-    } else {
-      const b = 0.25 + Math.random() * 0.45;
-      starColor[i * 3] = b; starColor[i * 3 + 1] = b; starColor[i * 3 + 2] = b;
-    }
-    starSize[i] = Math.random() * 1.5 + 0.3;
+  // Conveyor Belt Base
+  const beltGeo = new THREE.BoxGeometry(30, 0.5, 4);
+  const beltMat = new THREE.MeshStandardMaterial({ color: 0x1E1E1E, roughness: 0.8 });
+  const belt = new THREE.Mesh(beltGeo, beltMat);
+  belt.position.set(0, -2, 6);
+  belt.castShadow = true;
+  belt.receiveShadow = true;
+  factoryGroup.add(belt);
+
+  // Moving Boxes Array (Packages)
+  const boxes = [];
+  const boxGeo = new THREE.BoxGeometry(1.8, 1.8, 1.8);
+  const boxMats = [
+    new THREE.MeshStandardMaterial({ color: 0xD4AF37, roughness: 0.4 }), // Gold
+    new THREE.MeshStandardMaterial({ color: 0xB87333, roughness: 0.4 }), // Copper
+    new THREE.MeshStandardMaterial({ color: 0x10B981, roughness: 0.4 }), // Green
+  ];
+
+  for(let i=0; i<6; i++) {
+    const box = new THREE.Mesh(boxGeo, boxMats[i % 3]);
+    box.position.set(-15 + (i * 5), -0.8, 6);
+    box.castShadow = true;
+    box.receiveShadow = true;
+    factoryGroup.add(box);
+    boxes.push({ mesh: box, speed: 0.04 + (Math.random() * 0.02) });
   }
 
-  const starGeo = new THREE.BufferGeometry();
-  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
-  starGeo.setAttribute('color',    new THREE.BufferAttribute(starColor, 3));
-  starGeo.setAttribute('size',     new THREE.BufferAttribute(starSize, 1));
+  // Background Data Dashboard
+  const dashGroup = new THREE.Group();
+  dashGroup.position.set(-2, -1, -6);
+  factoryGroup.add(dashGroup);
 
-  const starMat = new THREE.PointsMaterial({
-    size: 0.06,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.85,
-    sizeAttenuation: true,
-  });
+  const boardGeo = new THREE.BoxGeometry(16, 10, 0.5);
+  const boardMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2, metalness: 0.1 });
+  const board = new THREE.Mesh(boardGeo, boardMat);
+  board.position.set(0, 3, 0);
+  board.castShadow = true;
+  board.receiveShadow = true;
+  dashGroup.add(board);
 
-  const stars = new THREE.Points(starGeo, starMat);
-  scene.add(stars);
+  // Chart Bars (Cylinders on the dashboard)
+  const bars = [];
+  const barGeo = new THREE.CylinderGeometry(0.6, 0.6, 1, 32);
+  for(let i=0; i<6; i++) {
+    const bar = new THREE.Mesh(barGeo, boxMats[i % 3]);
+    bar.position.set(-6 + (i * 2.4), -1, 1);
+    bar.rotation.x = 0;
+    bar.castShadow = true;
+    dashGroup.add(bar);
+    bars.push({ mesh: bar, baseHeight: Math.random() * 4 + 2, speed: Math.random() * 2 + 1 });
+  }
 
-  // ---- ANAMORPHIC BREAKOUT: HOLOGRAPHIC SEAL ----
-  const sealGroup = new THREE.Group();
+  // ---- LIGHTING ----
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
   
-  // Outer metallic rim
-  const rimGeo = new THREE.TorusGeometry(1.8, 0.1, 16, 100);
-  const rimMat = new THREE.MeshStandardMaterial({
-    color: 0xD4AF37, metalness: 0.8, roughness: 0.2
-  });
-  const rim = new THREE.Mesh(rimGeo, rimMat);
-  sealGroup.add(rim);
-
-  // Inner glass body
-  const bodyGeo = new THREE.CylinderGeometry(1.7, 1.7, 0.05, 64);
-  bodyGeo.rotateX(Math.PI / 2);
-  const bodyMat = new THREE.MeshPhysicalMaterial({
-    color: 0x0A0F1C,
-    metalness: 0.9,
-    roughness: 0.1,
-    transparent: true,
-    opacity: 0.8,
-    transmission: 0.9,
-    ior: 1.5
-  });
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
-  sealGroup.add(body);
-
-  // Inner wireframe detail
-  const wireGeo = new THREE.TorusGeometry(1.4, 0.02, 16, 64);
-  const wireMat = new THREE.MeshBasicMaterial({ color: 0xB87333, wireframe: true, transparent: true, opacity: 0.5 });
-  const wire = new THREE.Mesh(wireGeo, wireMat);
-  sealGroup.add(wire);
-
-  sealGroup.position.set(2, 0.5, 0); // Offset to the right
-  scene.add(sealGroup);
-
-  // Lighting
-  const light = new THREE.PointLight(0xD4AF37, 2, 50);
-  light.position.set(5, 5, 5);
-  scene.add(light);
-  const greenLight = new THREE.PointLight(0x10B981, 1.5, 50);
-  greenLight.position.set(-5, -5, 2);
-  scene.add(greenLight);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-
-  // Removed Data City per user request
-
-  // ---- FOOTER CHAKRA RING ----
-  const chakraGeo = new THREE.TorusKnotGeometry(2.5, 0.1, 128, 32);
-  const chakraMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37, wireframe: true, transparent: true, opacity: 0.2 });
-  const chakra = new THREE.Mesh(chakraGeo, chakraMat);
-  chakra.position.set(0, -1, -12);
-  scene.add(chakra);
-  // ---- AMBIENT PARTICLES (close, interactive) ----
-  const CLOSE_COUNT = 60;
-  const closePos = new Float32Array(CLOSE_COUNT * 3);
-  for (let i = 0; i < CLOSE_COUNT; i++) {
-    closePos[i * 3]     = (Math.random() - 0.5) * 12;
-    closePos[i * 3 + 1] = (Math.random() - 0.5) * 8;
-    closePos[i * 3 + 2] = (Math.random() - 0.5) * 6 - 1;
-  }
-
-  const closeGeo = new THREE.BufferGeometry();
-  closeGeo.setAttribute('position', new THREE.BufferAttribute(closePos, 3));
-
-  const closeMat = new THREE.PointsMaterial({
-    color: 0xD4AF37,
-    size: 0.04,
-    transparent: true,
-    opacity: 0.5,
-    sizeAttenuation: true,
-  });
-
-  const closeParticles = new THREE.Points(closeGeo, closeMat);
-  scene.add(closeParticles);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  dirLight.position.set(20, 40, -10);
+  dirLight.castShadow = true;
+  // Increase shadow map quality
+  dirLight.shadow.mapSize.width = 2048;
+  dirLight.shadow.mapSize.height = 2048;
+  dirLight.shadow.camera.left = -30;
+  dirLight.shadow.camera.right = 30;
+  dirLight.shadow.camera.top = 30;
+  dirLight.shadow.camera.bottom = -30;
+  scene.add(dirLight);
 
   // ---- MOUSE PARALLAX ----
   let mouseX = 0, mouseY = 0;
@@ -160,7 +128,11 @@
 
   // ---- RESIZE ----
   window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const aspect = window.innerWidth / window.innerHeight;
+    camera.left = -d * aspect;
+    camera.right = d * aspect;
+    camera.top = d;
+    camera.bottom = -d;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -188,39 +160,38 @@
     mouseX += (targetX - mouseX) * 0.04;
     mouseY += (targetY - mouseY) * 0.04;
 
-    // Stars rotation (very slow drift)
-    stars.rotation.y = t * 0.012;
-    stars.rotation.x = t * 0.006;
+    // Move boxes on conveyor belt
+    boxes.forEach(b => {
+      b.mesh.position.x += b.speed;
+      b.mesh.rotation.y = t * 0.5; // Slight spin for life
+      
+      // Reset position when off belt
+      if(b.mesh.position.x > 16) {
+        b.mesh.position.x = -16;
+      }
+    });
 
-    // Anamorphic Breakout Updates
-    // Holographic Seal Parallax (reacts to mouse)
-    sealGroup.rotation.y = mouseX * 0.5 + t * 0.2;
-    sealGroup.rotation.x = mouseY * 0.5 + Math.sin(t * 0.5) * 0.1;
-    sealGroup.position.y = 0.5 + Math.sin(t * 0.8) * 0.2;
-    
+    // Animate Chart bars
+    bars.forEach(b => {
+      const height = b.baseHeight + Math.sin(t * b.speed) * 2;
+      b.mesh.scale.y = Math.max(0.1, height);
+      b.mesh.position.y = -1 + (b.mesh.scale.y / 2); // Anchor to bottom
+    });
 
+    // Orthographic Camera Parallax (Shift target instead of rotation for stable isometric)
+    const scrollOffset = scrollProgress * 15;
     
-    // Chakra slow rotation
-    chakra.rotation.z = t * 0.1;
-    chakra.rotation.x = t * 0.05;
-
-    closeParticles.rotation.y = t * 0.05;
-    closeParticles.rotation.x = t * 0.03;
-
-    // Camera fly-through + parallax
-    camera.position.x += (mouseX * 0.6 - camera.position.x) * 0.025;
-    camera.position.y += (-mouseY * 0.4 - camera.position.y) * 0.025;
+    // Base isometric position
+    const baseX = 20;
+    const baseZ = 20;
     
-    // Aggressive 3D fly-through based on scroll!
-    // Start at Z=6, fly deep into the scene past the Chakra
-    camera.position.z = 6 - (scrollProgress * 18);
+    // Apply parallax
+    camera.position.x = baseX + mouseX * 2 - scrollOffset;
+    camera.position.z = baseZ - mouseY * 2 - scrollOffset;
+    camera.position.y = 20 - scrollOffset * 0.5;
     
-    // Subtle rotation mapping
-    camera.rotation.z = scrollProgress * Math.PI * 0.1;
-    
-    // Look at center, but offset by mouse
-    const lookTarget = new THREE.Vector3(mouseX * 0.2, -mouseY * 0.2, camera.position.z - 5);
-    camera.lookAt(lookTarget);
+    // Keep camera looking at the moving scene center
+    camera.lookAt(scene.position.x - scrollOffset, scene.position.y - scrollOffset*0.5, scene.position.z - scrollOffset);
 
     renderer.render(scene, camera);
   }
