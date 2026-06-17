@@ -5,15 +5,16 @@
 :root {
   --gold:        #D4AF37;
   --gold-light:  #F5D97D;
-  --gold-dim:    #A88B22;
+  --gold-dim:    #B87333;
   --gold-10:     rgba(212,175,55,0.10);
   --gold-20:     rgba(212,175,55,0.20);
   --gold-30:     rgba(212,175,55,0.30);
-  --black:       #030303;
-  --dark-1:      #080808;
-  --dark-2:      #0F0F0F;
-  --dark-3:      #161616;
-  --dark-4:      #1E1E1E;
+  --black:       #0A0F1C;
+  --dark-1:      #0B1120;
+  --dark-2:      #0C1324;
+  --dark-3:      #0E1629;
+  --dark-4:      #101A30;
+  --green:       #10B981;
   --white:       #FFFFFF;
   --w80:         rgba(255,255,255,0.80);
   --w60:         rgba(255,255,255,0.60);
@@ -71,7 +72,7 @@ body {
 }
 
 #navbar.scrolled {
-  background: rgba(3,3,3,0.88);
+  background: rgba(10, 15, 28, 0.88);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid var(--gold-20);
@@ -490,7 +491,9 @@ section:not(#hero) {
 
 .svc-card {
   position: relative;
-  background: var(--w03);
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--w10);
   border-radius: var(--r16);
   padding: 32px 28px;

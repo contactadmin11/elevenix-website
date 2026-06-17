@@ -67,44 +67,79 @@
   const stars = new THREE.Points(starGeo, starMat);
   scene.add(stars);
 
-  // ---- TECH NETWORK GRAPH ----
-  const NODE_COUNT = 120;
-  const nodes = [];
-  for (let i = 0; i < NODE_COUNT; i++) {
-    nodes.push({
-      x: (Math.random() - 0.5) * 20,
-      y: (Math.random() - 0.5) * 15,
-      z: (Math.random() - 0.5) * 10 - 2,
-      vx: (Math.random() - 0.5) * 0.015,
-      vy: (Math.random() - 0.5) * 0.015,
-      vz: (Math.random() - 0.5) * 0.015,
-    });
+  // ---- ANAMORPHIC BREAKOUT: HOLOGRAPHIC SEAL ----
+  const sealGroup = new THREE.Group();
+  
+  // Outer metallic rim
+  const rimGeo = new THREE.TorusGeometry(1.8, 0.1, 16, 100);
+  const rimMat = new THREE.MeshStandardMaterial({
+    color: 0xD4AF37, metalness: 0.8, roughness: 0.2
+  });
+  const rim = new THREE.Mesh(rimGeo, rimMat);
+  sealGroup.add(rim);
+
+  // Inner glass body
+  const bodyGeo = new THREE.CylinderGeometry(1.7, 1.7, 0.05, 64);
+  bodyGeo.rotateX(Math.PI / 2);
+  const bodyMat = new THREE.MeshPhysicalMaterial({
+    color: 0x0A0F1C,
+    metalness: 0.9,
+    roughness: 0.1,
+    transparent: true,
+    opacity: 0.8,
+    transmission: 0.9,
+    ior: 1.5
+  });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  sealGroup.add(body);
+
+  // Inner wireframe detail
+  const wireGeo = new THREE.TorusGeometry(1.4, 0.02, 16, 64);
+  const wireMat = new THREE.MeshBasicMaterial({ color: 0xB87333, wireframe: true, transparent: true, opacity: 0.5 });
+  const wire = new THREE.Mesh(wireGeo, wireMat);
+  sealGroup.add(wire);
+
+  sealGroup.position.set(2, 0.5, 0); // Offset to the right
+  scene.add(sealGroup);
+
+  // Lighting
+  const light = new THREE.PointLight(0xD4AF37, 2, 50);
+  light.position.set(5, 5, 5);
+  scene.add(light);
+  const greenLight = new THREE.PointLight(0x10B981, 1.5, 50);
+  greenLight.position.set(-5, -5, 2);
+  scene.add(greenLight);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+  // ---- 3D DATA CITY SKYLINE ----
+  const cityGroup = new THREE.Group();
+  const boxGeo = new THREE.BoxGeometry(1, 1, 1);
+  const boxMatGold = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.5, roughness: 0.5 });
+  const boxMatCopper = new THREE.MeshStandardMaterial({ color: 0xB87333, metalness: 0.5, roughness: 0.5 });
+  const boxMatGreen = new THREE.MeshStandardMaterial({ color: 0x10B981, metalness: 0.3, roughness: 0.7, emissive: 0x10B981, emissiveIntensity: 0.2 });
+
+  for(let i=0; i<45; i++) {
+    const isSpecial = Math.random() > 0.8;
+    const isGreen = Math.random() > 0.9;
+    const mesh = new THREE.Mesh(boxGeo, isGreen ? boxMatGreen : (isSpecial ? boxMatCopper : boxMatGold));
+    
+    // Spread along Z from -2 to -10, keep X out of the center
+    const x = (Math.random() > 0.5 ? 1 : -1) * (3 + Math.random() * 8);
+    const z = -2 - Math.random() * 12;
+    const height = 0.5 + Math.random() * 4 + (isSpecial ? 3 : 0);
+    
+    mesh.position.set(x, -3 + height/2, z);
+    mesh.scale.set(0.6 + Math.random(), height, 0.6 + Math.random());
+    cityGroup.add(mesh);
   }
+  scene.add(cityGroup);
 
-  const netMat = new THREE.LineBasicMaterial({
-    color: 0xD4AF37,
-    transparent: true,
-    opacity: 0.15,
-    blending: THREE.AdditiveBlending
-  });
-
-  const nodeGeo = new THREE.BufferGeometry();
-  const nodePos = new Float32Array(NODE_COUNT * 3);
-  const nodeMat = new THREE.PointsMaterial({
-    color: 0xF5D97D,
-    size: 0.06,
-    transparent: true,
-    opacity: 0.8
-  });
-  const nodePoints = new THREE.Points(nodeGeo, nodeMat);
-  scene.add(nodePoints);
-
-  const linesGeo = new THREE.BufferGeometry();
-  const maxLines = 4000;
-  const linePos = new Float32Array(maxLines * 6);
-  linesGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
-  const lineMesh = new THREE.LineSegments(linesGeo, netMat);
-  scene.add(lineMesh);
+  // ---- FOOTER CHAKRA RING ----
+  const chakraGeo = new THREE.TorusKnotGeometry(2.5, 0.1, 128, 32);
+  const chakraMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37, wireframe: true, transparent: true, opacity: 0.2 });
+  const chakra = new THREE.Mesh(chakraGeo, chakraMat);
+  chakra.position.set(0, -1, -12);
+  scene.add(chakra);
   // ---- AMBIENT PARTICLES (close, interactive) ----
   const CLOSE_COUNT = 60;
   const closePos = new Float32Array(CLOSE_COUNT * 3);
@@ -188,35 +223,18 @@
     stars.rotation.y = t * 0.012;
     stars.rotation.x = t * 0.006;
 
-    // Update Tech Network
-    let lineIdx = 0;
-    for (let i = 0; i < NODE_COUNT; i++) {
-      const n1 = nodes[i];
-      n1.x += n1.vx; n1.y += n1.vy; n1.z += n1.vz;
-
-      // Bounce bounds
-      if(n1.x > 10 || n1.x < -10) n1.vx *= -1;
-      if(n1.y > 8 || n1.y < -8) n1.vy *= -1;
-      if(n1.z > 2 || n1.z < -12) n1.vz *= -1;
-
-      nodePos[i*3] = n1.x; nodePos[i*3+1] = n1.y; nodePos[i*3+2] = n1.z;
-
-      for (let j = i + 1; j < NODE_COUNT; j++) {
-        const n2 = nodes[j];
-        const dx = n1.x - n2.x;
-        const dy = n1.y - n2.y;
-        const dz = n1.z - n2.z;
-        const distSq = dx*dx + dy*dy + dz*dz;
-        
-        if (distSq < 6.0 && lineIdx < maxLines * 6) {
-          linePos[lineIdx++] = n1.x; linePos[lineIdx++] = n1.y; linePos[lineIdx++] = n1.z;
-          linePos[lineIdx++] = n2.x; linePos[lineIdx++] = n2.y; linePos[lineIdx++] = n2.z;
-        }
-      }
-    }
-    nodeGeo.setAttribute('position', new THREE.BufferAttribute(nodePos, 3));
-    linesGeo.setDrawRange(0, lineIdx / 3);
-    linesGeo.attributes.position.needsUpdate = true;
+    // Anamorphic Breakout Updates
+    // Holographic Seal Parallax (reacts to mouse)
+    sealGroup.rotation.y = mouseX * 0.5 + t * 0.2;
+    sealGroup.rotation.x = mouseY * 0.5 + Math.sin(t * 0.5) * 0.1;
+    sealGroup.position.y = 0.5 + Math.sin(t * 0.8) * 0.2;
+    
+    // Data City gentle pulse
+    cityGroup.position.y = Math.sin(t * 0.2) * 0.1;
+    
+    // Chakra slow rotation
+    chakra.rotation.z = t * 0.1;
+    chakra.rotation.x = t * 0.05;
 
     closeParticles.rotation.y = t * 0.05;
     closeParticles.rotation.x = t * 0.03;
@@ -226,11 +244,11 @@
     camera.position.y += (-mouseY * 0.4 - camera.position.y) * 0.025;
     
     // Aggressive 3D fly-through based on scroll!
-    // Start at Z=6, fly deep into the network to Z=-8
-    camera.position.z = 6 - (scrollProgress * 14);
+    // Start at Z=6, fly deep into the scene past the Chakra
+    camera.position.z = 6 - (scrollProgress * 18);
     
-    // Slightly rotate the entire network as we scroll for dramatic effect
-    camera.rotation.z = scrollProgress * Math.PI * 0.15;
+    // Subtle rotation mapping
+    camera.rotation.z = scrollProgress * Math.PI * 0.1;
     
     // Look at center, but offset by mouse
     const lookTarget = new THREE.Vector3(mouseX * 0.2, -mouseY * 0.2, camera.position.z - 5);
@@ -281,7 +299,7 @@
   });
 
   // --------------------------------------------------------
-  // GSAP SCROLL REVEAL
+  // GSAP SCROLL REVEAL - "CARD DEALING" ANAMORPHIC EFFECT
   // --------------------------------------------------------
   gsap.registerPlugin(ScrollTrigger);
 
@@ -289,20 +307,22 @@
     const elements = section.querySelectorAll('.section-title, .section-subtitle, .svc-card, .sw-card, .why-card, .contact-item, .contact-form');
     if (elements.length === 0) return;
 
+    // "Dealing Cards" 3D Flip Animation
     gsap.fromTo(elements, 
-      { y: 80, opacity: 0, rotationX: 10, scale: 0.95 },
+      { y: 150, z: -500, opacity: 0, rotationX: 90, scale: 0.8, transformPerspective: 1200 },
       {
         y: 0,
+        z: 0,
         opacity: 1,
         rotationX: 0,
         scale: 1,
-        duration: 1.2,
-        stagger: 0.15,
-        ease: "power3.out",
+        duration: 1.4,
+        stagger: 0.2,
+        ease: "power4.out",
         scrollTrigger: {
           trigger: section,
-          start: "top 80%",
-          end: "bottom 20%",
+          start: "top 85%",
+          end: "bottom 15%",
           toggleActions: "play none none reverse"
         }
       }
