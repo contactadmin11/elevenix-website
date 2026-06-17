@@ -162,22 +162,27 @@
   });
 
   // --------------------------------------------------------
-  // HERO 3D ENTRANCE ANIMATION
+  // HERO 3D ENTRANCE ANIMATION (Aggressive Fly-In)
   // --------------------------------------------------------
-  gsap.fromTo('.hero-badge, .hero-title, .hero-tagline, .hero-tagline-hi, .hero-desc, .hero-actions, .hero-stats', 
-    { y: 100, z: -800, opacity: 0, rotationX: 80, scale: 0.5, transformPerspective: 1200 },
-    {
-      y: 0,
-      z: 0,
-      opacity: 1,
-      rotationX: 0,
-      scale: 1,
-      duration: 1.2,
-      stagger: 0.1,
-      ease: "power4.out",
-      delay: 0.1
-    }
-  );
+  window.addEventListener('load', () => {
+    // Hide initially to prevent FOUC before JS loads
+    gsap.fromTo('.hero-badge, .hero-title, .hero-tagline, .hero-tagline-hi, .hero-desc, .hero-actions, .hero-stats', 
+      { 
+        z: 1500, // Start way in front of the screen
+        scale: 4, 
+        opacity: 0, 
+        transformPerspective: 1500 
+      },
+      {
+        z: 0,
+        scale: 1,
+        opacity: 1,
+        duration: 1.2,
+        stagger: 0.1,
+        ease: "expo.out"
+      }
+    );
+  });
 
   // --------------------------------------------------------
   // GSAP SCROLL REVEAL - "CARD DEALING" ANAMORPHIC EFFECT
@@ -188,22 +193,20 @@
     const elements = section.querySelectorAll('.section-title, .section-subtitle, .svc-card, .sw-card, .why-card, .contact-item, .contact-form');
     if (elements.length === 0) return;
 
-    // "Dealing Cards" 3D Flip Animation (Fast/Instant feel)
+    // "Dealing Cards" 3D Flip Animation (Instant!)
     gsap.fromTo(elements, 
-      { y: 100, z: -300, opacity: 0, rotationX: 60, scale: 0.9, transformPerspective: 1200 },
+      { y: 50, z: -100, opacity: 0, rotationX: 45, transformPerspective: 1200 },
       {
         y: 0,
         z: 0,
         opacity: 1,
         rotationX: 0,
-        scale: 1,
-        duration: 0.5,
-        stagger: 0.05,
-        ease: "power3.out",
+        duration: 0.2, // Instantly snaps into place
+        stagger: 0, // No waiting between cards
+        ease: "power1.out",
         scrollTrigger: {
           trigger: section,
-          start: "top 90%",
-          end: "bottom 10%",
+          start: "top 100%", // Trigger the absolute moment it enters the screen
           toggleActions: "play none none reverse"
         }
       }
