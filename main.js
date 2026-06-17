@@ -164,7 +164,7 @@
   // --------------------------------------------------------
   // HERO 3D ENTRANCE ANIMATION
   // --------------------------------------------------------
-  gsap.fromTo('.hero h1, .hero p, .hero .hero-btns', 
+  gsap.fromTo('.hero-badge, .hero-title, .hero-tagline, .hero-tagline-hi, .hero-desc, .hero-actions, .hero-stats', 
     { y: 100, z: -800, opacity: 0, rotationX: 80, scale: 0.5, transformPerspective: 1200 },
     {
       y: 0,
@@ -172,10 +172,10 @@
       opacity: 1,
       rotationX: 0,
       scale: 1,
-      duration: 1.8,
-      stagger: 0.15,
+      duration: 1.2,
+      stagger: 0.1,
       ease: "power4.out",
-      delay: 0.2
+      delay: 0.1
     }
   );
 
@@ -188,22 +188,22 @@
     const elements = section.querySelectorAll('.section-title, .section-subtitle, .svc-card, .sw-card, .why-card, .contact-item, .contact-form');
     if (elements.length === 0) return;
 
-    // "Dealing Cards" 3D Flip Animation
+    // "Dealing Cards" 3D Flip Animation (Fast/Instant feel)
     gsap.fromTo(elements, 
-      { y: 150, z: -500, opacity: 0, rotationX: 90, scale: 0.8, transformPerspective: 1200 },
+      { y: 100, z: -300, opacity: 0, rotationX: 60, scale: 0.9, transformPerspective: 1200 },
       {
         y: 0,
         z: 0,
         opacity: 1,
         rotationX: 0,
         scale: 1,
-        duration: 1.4,
-        stagger: 0.2,
-        ease: "power4.out",
+        duration: 0.5,
+        stagger: 0.05,
+        ease: "power3.out",
         scrollTrigger: {
           trigger: section,
-          start: "top 85%",
-          end: "bottom 15%",
+          start: "top 90%",
+          end: "bottom 10%",
           toggleActions: "play none none reverse"
         }
       }
