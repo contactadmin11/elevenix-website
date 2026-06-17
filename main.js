@@ -111,28 +111,7 @@
   scene.add(greenLight);
   scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
-  // ---- 3D DATA CITY SKYLINE ----
-  const cityGroup = new THREE.Group();
-  const boxGeo = new THREE.BoxGeometry(1, 1, 1);
-  const boxMatGold = new THREE.MeshStandardMaterial({ color: 0xD4AF37, metalness: 0.5, roughness: 0.5 });
-  const boxMatCopper = new THREE.MeshStandardMaterial({ color: 0xB87333, metalness: 0.5, roughness: 0.5 });
-  const boxMatGreen = new THREE.MeshStandardMaterial({ color: 0x10B981, metalness: 0.3, roughness: 0.7, emissive: 0x10B981, emissiveIntensity: 0.2 });
-
-  for(let i=0; i<45; i++) {
-    const isSpecial = Math.random() > 0.8;
-    const isGreen = Math.random() > 0.9;
-    const mesh = new THREE.Mesh(boxGeo, isGreen ? boxMatGreen : (isSpecial ? boxMatCopper : boxMatGold));
-    
-    // Spread along Z from -2 to -10, keep X out of the center
-    const x = (Math.random() > 0.5 ? 1 : -1) * (3 + Math.random() * 8);
-    const z = -2 - Math.random() * 12;
-    const height = 0.5 + Math.random() * 4 + (isSpecial ? 3 : 0);
-    
-    mesh.position.set(x, -3 + height/2, z);
-    mesh.scale.set(0.6 + Math.random(), height, 0.6 + Math.random());
-    cityGroup.add(mesh);
-  }
-  scene.add(cityGroup);
+  // Removed Data City per user request
 
   // ---- FOOTER CHAKRA RING ----
   const chakraGeo = new THREE.TorusKnotGeometry(2.5, 0.1, 128, 32);
@@ -187,26 +166,16 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
 
-  // ---- SCROLL-BASED DEPTH & LENIS SMOOTH SCROLL ----
+  // ---- NATIVE SCROLL-BASED DEPTH ----
   let scrollY = 0;
   let scrollProgress = 0;
 
-  const lenis = new Lenis({
-    duration: 1.2,
-    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    smooth: true,
-  });
-
-  lenis.on('scroll', (e) => {
-    scrollY = e.scroll;
-    scrollProgress = e.progress; // 0 to 1
-  });
-
-  function raf(time) {
-    lenis.raf(time);
-    requestAnimationFrame(raf);
-  }
-  requestAnimationFrame(raf);
+  window.addEventListener('scroll', () => {
+    scrollY = window.scrollY;
+    // Calculate scroll progress (0 to 1) based on document height
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    scrollProgress = Math.max(0, Math.min(1, maxScroll > 0 ? scrollY / maxScroll : 0));
+  }, { passive: true });
 
   // ---- ANIMATION LOOP ----
   const clock = new THREE.Clock();
@@ -229,8 +198,7 @@
     sealGroup.rotation.x = mouseY * 0.5 + Math.sin(t * 0.5) * 0.1;
     sealGroup.position.y = 0.5 + Math.sin(t * 0.8) * 0.2;
     
-    // Data City gentle pulse
-    cityGroup.position.y = Math.sin(t * 0.2) * 0.1;
+
     
     // Chakra slow rotation
     chakra.rotation.z = t * 0.1;
