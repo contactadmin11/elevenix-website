@@ -152,9 +152,26 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   });
 
-  // ---- SCROLL-BASED DEPTH ----
+  // ---- SCROLL-BASED DEPTH & LENIS SMOOTH SCROLL ----
   let scrollY = 0;
-  window.addEventListener('scroll', () => { scrollY = window.scrollY; }, { passive: true });
+  let scrollProgress = 0;
+
+  const lenis = new Lenis({
+    duration: 1.2,
+    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    smooth: true,
+  });
+
+  lenis.on('scroll', (e) => {
+    scrollY = e.scroll;
+    scrollProgress = e.progress; // 0 to 1
+  });
+
+  function raf(time) {
+    lenis.raf(time);
+    requestAnimationFrame(raf);
+  }
+  requestAnimationFrame(raf);
 
   // ---- ANIMATION LOOP ----
   const clock = new THREE.Clock();
@@ -204,12 +221,20 @@
     closeParticles.rotation.y = t * 0.05;
     closeParticles.rotation.x = t * 0.03;
 
-    // Camera parallax + scroll depth
-    const scrollOffset = scrollY * 0.001;
+    // Camera fly-through + parallax
     camera.position.x += (mouseX * 0.6 - camera.position.x) * 0.025;
     camera.position.y += (-mouseY * 0.4 - camera.position.y) * 0.025;
-    camera.position.z = 6 + scrollOffset * 0.5;
-    camera.lookAt(scene.position);
+    
+    // Aggressive 3D fly-through based on scroll!
+    // Start at Z=6, fly deep into the network to Z=-8
+    camera.position.z = 6 - (scrollProgress * 14);
+    
+    // Slightly rotate the entire network as we scroll for dramatic effect
+    camera.rotation.z = scrollProgress * Math.PI * 0.15;
+    
+    // Look at center, but offset by mouse
+    const lookTarget = new THREE.Vector3(mouseX * 0.2, -mouseY * 0.2, camera.position.z - 5);
+    camera.lookAt(lookTarget);
 
     renderer.render(scene, camera);
   }
@@ -256,21 +281,33 @@
   });
 
   // --------------------------------------------------------
-  // SCROLL REVEAL
+  // GSAP SCROLL REVEAL
   // --------------------------------------------------------
-  const revealTargets = document.querySelectorAll('.svc-card, .sw-card, .why-card, .contact-item, .contact-form');
-  revealTargets.forEach(el => el.classList.add('reveal'));
+  gsap.registerPlugin(ScrollTrigger);
 
-  const revealObs = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (!entry.isIntersecting) return;
-      const delay = parseInt(entry.target.dataset.delay || '0');
-      setTimeout(() => entry.target.classList.add('visible'), delay);
-      revealObs.unobserve(entry.target);
-    });
-  }, { threshold: 0.12 });
+  gsap.utils.toArray('section').forEach((section) => {
+    const elements = section.querySelectorAll('.section-title, .section-subtitle, .svc-card, .sw-card, .why-card, .contact-item, .contact-form');
+    if (elements.length === 0) return;
 
-  revealTargets.forEach(el => revealObs.observe(el));
+    gsap.fromTo(elements, 
+      { y: 80, opacity: 0, rotationX: 10, scale: 0.95 },
+      {
+        y: 0,
+        opacity: 1,
+        rotationX: 0,
+        scale: 1,
+        duration: 1.2,
+        stagger: 0.15,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: section,
+          start: "top 80%",
+          end: "bottom 20%",
+          toggleActions: "play none none reverse"
+        }
+      }
+    );
+  });
 
   // --------------------------------------------------------
   // COUNTER ANIMATION
