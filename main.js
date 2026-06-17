@@ -30,85 +30,23 @@
   const C_WHITE    = new THREE.Color(0xFFFFFF);
   const C_DIM      = new THREE.Color(0x333333);
 
-  // ---- ISOMETRIC FACTORY SCENE ----
-  const factoryGroup = new THREE.Group();
-  scene.add(factoryGroup);
-
-  // Floor plane (receives shadows)
-  const floorGeo = new THREE.PlaneGeometry(200, 200);
-  const floorMat = new THREE.MeshStandardMaterial({ color: 0x0A0F1C, roughness: 0.1, metalness: 0.1 });
-  const floor = new THREE.Mesh(floorGeo, floorMat);
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -4;
-  floor.receiveShadow = true;
-  factoryGroup.add(floor);
-
-  // Conveyor Belt Base
-  const beltGeo = new THREE.BoxGeometry(30, 0.5, 4);
-  const beltMat = new THREE.MeshStandardMaterial({ color: 0x1E1E1E, roughness: 0.8 });
-  const belt = new THREE.Mesh(beltGeo, beltMat);
-  belt.position.set(0, -2, 6);
-  belt.castShadow = true;
-  belt.receiveShadow = true;
-  factoryGroup.add(belt);
-
-  // Moving Boxes Array (Packages)
-  const boxes = [];
-  const boxGeo = new THREE.BoxGeometry(1.8, 1.8, 1.8);
-  const boxMats = [
-    new THREE.MeshStandardMaterial({ color: 0xD4AF37, roughness: 0.4 }), // Gold
-    new THREE.MeshStandardMaterial({ color: 0xB87333, roughness: 0.4 }), // Copper
-    new THREE.MeshStandardMaterial({ color: 0x10B981, roughness: 0.4 }), // Green
-  ];
-
-  for(let i=0; i<6; i++) {
-    const box = new THREE.Mesh(boxGeo, boxMats[i % 3]);
-    box.position.set(-15 + (i * 5), -0.8, 6);
-    box.castShadow = true;
-    box.receiveShadow = true;
-    factoryGroup.add(box);
-    boxes.push({ mesh: box, speed: 0.04 + (Math.random() * 0.02) });
+  // ---- BACKGROUND REMOVED PER USER REQUEST ----
+  // Adding subtle ambient dust instead so it isn't completely black
+  const dustGeo = new THREE.BufferGeometry();
+  const dustCount = 200;
+  const dustPos = new Float32Array(dustCount * 3);
+  for(let i=0; i<dustCount; i++) {
+    dustPos[i*3] = (Math.random() - 0.5) * 50;
+    dustPos[i*3+1] = (Math.random() - 0.5) * 50;
+    dustPos[i*3+2] = (Math.random() - 0.5) * 50;
   }
-
-  // Background Data Dashboard
-  const dashGroup = new THREE.Group();
-  dashGroup.position.set(-2, -1, -6);
-  factoryGroup.add(dashGroup);
-
-  const boardGeo = new THREE.BoxGeometry(16, 10, 0.5);
-  const boardMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2, metalness: 0.1 });
-  const board = new THREE.Mesh(boardGeo, boardMat);
-  board.position.set(0, 3, 0);
-  board.castShadow = true;
-  board.receiveShadow = true;
-  dashGroup.add(board);
-
-  // Chart Bars (Cylinders on the dashboard)
-  const bars = [];
-  const barGeo = new THREE.CylinderGeometry(0.6, 0.6, 1, 32);
-  for(let i=0; i<6; i++) {
-    const bar = new THREE.Mesh(barGeo, boxMats[i % 3]);
-    bar.position.set(-6 + (i * 2.4), -1, 1);
-    bar.rotation.x = 0;
-    bar.castShadow = true;
-    dashGroup.add(bar);
-    bars.push({ mesh: bar, baseHeight: Math.random() * 4 + 2, speed: Math.random() * 2 + 1 });
-  }
+  dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+  const dustMat = new THREE.PointsMaterial({ color: 0xD4AF37, size: 0.1, transparent: true, opacity: 0.4 });
+  const dust = new THREE.Points(dustGeo, dustMat);
+  scene.add(dust);
 
   // ---- LIGHTING ----
   scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-  
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-  dirLight.position.set(20, 40, -10);
-  dirLight.castShadow = true;
-  // Increase shadow map quality
-  dirLight.shadow.mapSize.width = 2048;
-  dirLight.shadow.mapSize.height = 2048;
-  dirLight.shadow.camera.left = -30;
-  dirLight.shadow.camera.right = 30;
-  dirLight.shadow.camera.top = 30;
-  dirLight.shadow.camera.bottom = -30;
-  scene.add(dirLight);
 
   // ---- MOUSE PARALLAX ----
   let mouseX = 0, mouseY = 0;
@@ -160,23 +98,9 @@
     mouseX += (targetX - mouseX) * 0.04;
     mouseY += (targetY - mouseY) * 0.04;
 
-    // Move boxes on conveyor belt
-    boxes.forEach(b => {
-      b.mesh.position.x += b.speed;
-      b.mesh.rotation.y = t * 0.5; // Slight spin for life
-      
-      // Reset position when off belt
-      if(b.mesh.position.x > 16) {
-        b.mesh.position.x = -16;
-      }
-    });
-
-    // Animate Chart bars
-    bars.forEach(b => {
-      const height = b.baseHeight + Math.sin(t * b.speed) * 2;
-      b.mesh.scale.y = Math.max(0.1, height);
-      b.mesh.position.y = -1 + (b.mesh.scale.y / 2); // Anchor to bottom
-    });
+    // Dust rotation
+    dust.rotation.y = t * 0.05;
+    dust.rotation.x = t * 0.02;
 
     // Orthographic Camera Parallax (Shift target instead of rotation for stable isometric)
     const scrollOffset = scrollProgress * 15;
@@ -236,6 +160,24 @@
       s2.style.opacity = '1';
     });
   });
+
+  // --------------------------------------------------------
+  // HERO 3D ENTRANCE ANIMATION
+  // --------------------------------------------------------
+  gsap.fromTo('.hero h1, .hero p, .hero .hero-btns', 
+    { y: 100, z: -800, opacity: 0, rotationX: 80, scale: 0.5, transformPerspective: 1200 },
+    {
+      y: 0,
+      z: 0,
+      opacity: 1,
+      rotationX: 0,
+      scale: 1,
+      duration: 1.8,
+      stagger: 0.15,
+      ease: "power4.out",
+      delay: 0.2
+    }
+  );
 
   // --------------------------------------------------------
   // GSAP SCROLL REVEAL - "CARD DEALING" ANAMORPHIC EFFECT
