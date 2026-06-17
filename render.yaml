@@ -1,0 +1,10 @@
+{
+  "buildCommand": "",
+  "publishDir": ".",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
