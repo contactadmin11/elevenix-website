@@ -67,55 +67,44 @@
   const stars = new THREE.Points(starGeo, starMat);
   scene.add(stars);
 
-  // ---- HELPER: wireframe mesh ----
-  function wireMesh(geo, color, opacity) {
-    return new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
-      color, wireframe: true, transparent: true, opacity,
-    }));
+  // ---- TECH NETWORK GRAPH ----
+  const NODE_COUNT = 120;
+  const nodes = [];
+  for (let i = 0; i < NODE_COUNT; i++) {
+    nodes.push({
+      x: (Math.random() - 0.5) * 20,
+      y: (Math.random() - 0.5) * 15,
+      z: (Math.random() - 0.5) * 10 - 2,
+      vx: (Math.random() - 0.5) * 0.015,
+      vy: (Math.random() - 0.5) * 0.015,
+      vz: (Math.random() - 0.5) * 0.015,
+    });
   }
 
-  // ---- FLOATING OBJECTS ----
-  // 1. Large torus — left
-  const torus1 = wireMesh(new THREE.TorusGeometry(1.3, 0.018, 24, 100), 0xD4AF37, 0.45);
-  torus1.position.set(-4.5, 1.5, -4);
-  scene.add(torus1);
+  const netMat = new THREE.LineBasicMaterial({
+    color: 0xD4AF37,
+    transparent: true,
+    opacity: 0.15,
+    blending: THREE.AdditiveBlending
+  });
 
-  // 2. Medium torus — right
-  const torus2 = wireMesh(new THREE.TorusGeometry(0.8, 0.014, 16, 70), 0xF5D97D, 0.35);
-  torus2.position.set(4.8, -1.2, -2.5);
-  torus2.rotation.x = 0.8;
-  scene.add(torus2);
+  const nodeGeo = new THREE.BufferGeometry();
+  const nodePos = new Float32Array(NODE_COUNT * 3);
+  const nodeMat = new THREE.PointsMaterial({
+    color: 0xF5D97D,
+    size: 0.06,
+    transparent: true,
+    opacity: 0.8
+  });
+  const nodePoints = new THREE.Points(nodeGeo, nodeMat);
+  scene.add(nodePoints);
 
-  // 3. Icosahedron — top right
-  const ico = wireMesh(new THREE.IcosahedronGeometry(0.9, 1), 0xD4AF37, 0.28);
-  ico.position.set(4, 2.8, -5);
-  scene.add(ico);
-
-  // 4. Octahedron — bottom left
-  const oct = wireMesh(new THREE.OctahedronGeometry(0.75), 0xF5D97D, 0.30);
-  oct.position.set(-4.5, -2.5, -3);
-  scene.add(oct);
-
-  // 5. Dodecahedron — top center
-  const dod = wireMesh(new THREE.DodecahedronGeometry(0.65), 0xD4AF37, 0.22);
-  dod.position.set(1, 3.5, -6);
-  scene.add(dod);
-
-  // 6. Outer ring — center back
-  const ring = wireMesh(new THREE.TorusGeometry(2.4, 0.01, 3, 120), 0xD4AF37, 0.12);
-  ring.position.set(0, 0, -8);
-  scene.add(ring);
-
-  // 7. Tetrahedron
-  const tet = wireMesh(new THREE.TetrahedronGeometry(0.7), 0xF5D97D, 0.25);
-  tet.position.set(-2, 3, -4);
-  scene.add(tet);
-
-  // 8. Small torus — bottom right
-  const torus3 = wireMesh(new THREE.TorusGeometry(0.5, 0.012, 12, 50), 0xD4AF37, 0.30);
-  torus3.position.set(3, -3.2, -3);
-  scene.add(torus3);
-
+  const linesGeo = new THREE.BufferGeometry();
+  const maxLines = 4000;
+  const linePos = new Float32Array(maxLines * 6);
+  linesGeo.setAttribute('position', new THREE.BufferAttribute(linePos, 3));
+  const lineMesh = new THREE.LineSegments(linesGeo, netMat);
+  scene.add(lineMesh);
   // ---- AMBIENT PARTICLES (close, interactive) ----
   const CLOSE_COUNT = 60;
   const closePos = new Float32Array(CLOSE_COUNT * 3);
@@ -182,36 +171,35 @@
     stars.rotation.y = t * 0.012;
     stars.rotation.x = t * 0.006;
 
-    // Geometric objects
-    torus1.rotation.x = t * 0.22;
-    torus1.rotation.y = t * 0.15;
-    torus1.position.y = 1.5 + Math.sin(t * 0.4) * 0.35;
+    // Update Tech Network
+    let lineIdx = 0;
+    for (let i = 0; i < NODE_COUNT; i++) {
+      const n1 = nodes[i];
+      n1.x += n1.vx; n1.y += n1.vy; n1.z += n1.vz;
 
-    torus2.rotation.z = t * 0.35;
-    torus2.rotation.x = 0.8 + t * 0.18;
-    torus2.position.y = -1.2 + Math.sin(t * 0.5 + 1) * 0.3;
+      // Bounce bounds
+      if(n1.x > 10 || n1.x < -10) n1.vx *= -1;
+      if(n1.y > 8 || n1.y < -8) n1.vy *= -1;
+      if(n1.z > 2 || n1.z < -12) n1.vz *= -1;
 
-    ico.rotation.x = t * 0.28;
-    ico.rotation.y = t * 0.22;
-    ico.position.y = 2.8 + Math.sin(t * 0.38 + 0.5) * 0.4;
+      nodePos[i*3] = n1.x; nodePos[i*3+1] = n1.y; nodePos[i*3+2] = n1.z;
 
-    oct.rotation.x = t * 0.18;
-    oct.rotation.z = t * 0.25;
-    oct.position.y = -2.5 + Math.sin(t * 0.55 + 2) * 0.3;
-
-    dod.rotation.y = t * 0.32;
-    dod.rotation.x = t * 0.20;
-    dod.position.y = 3.5 + Math.sin(t * 0.28 + 0.8) * 0.5;
-
-    tet.rotation.y = t * 0.40;
-    tet.rotation.z = t * 0.22;
-    tet.position.y = 3 + Math.sin(t * 0.45 + 1.2) * 0.35;
-
-    torus3.rotation.z = t * 0.55;
-    torus3.position.y = -3.2 + Math.sin(t * 0.60 + 0.3) * 0.25;
-
-    ring.rotation.x = t * 0.08;
-    ring.rotation.z = t * 0.05;
+      for (let j = i + 1; j < NODE_COUNT; j++) {
+        const n2 = nodes[j];
+        const dx = n1.x - n2.x;
+        const dy = n1.y - n2.y;
+        const dz = n1.z - n2.z;
+        const distSq = dx*dx + dy*dy + dz*dz;
+        
+        if (distSq < 6.0 && lineIdx < maxLines * 6) {
+          linePos[lineIdx++] = n1.x; linePos[lineIdx++] = n1.y; linePos[lineIdx++] = n1.z;
+          linePos[lineIdx++] = n2.x; linePos[lineIdx++] = n2.y; linePos[lineIdx++] = n2.z;
+        }
+      }
+    }
+    nodeGeo.setAttribute('position', new THREE.BufferAttribute(nodePos, 3));
+    linesGeo.setDrawRange(0, lineIdx / 3);
+    linesGeo.attributes.position.needsUpdate = true;
 
     closeParticles.rotation.y = t * 0.05;
     closeParticles.rotation.x = t * 0.03;
