@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://neohubware.com/sitemap.xml
+
+# Block crawling of non-essential resources
+Disallow: /main.js
+Disallow: /style.css
