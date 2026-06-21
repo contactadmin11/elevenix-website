@@ -1015,7 +1015,9 @@ footer {
   .hamburger { display: flex; }
 
   .form-row-2 { grid-template-columns: 1fr; }
-  .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+  .contact-grid { grid-template-columns: 1fr; gap: 40px; display: flex; flex-direction: column; }
+  .contact-form { order: -1; width: 100%; }
+  .contact-left { width: 100%; }
   .footer-inner { grid-template-columns: 1fr 1fr; gap: 32px; }
   .stat-divider { display: none; }
   .hero-stats { gap: 32px; }
@@ -1026,4 +1028,69 @@ footer {
   .contact-form { padding: 28px 20px; }
   .hero-actions { flex-direction: column; align-items: center; }
   .btn-gold, .btn-outline { width: 100%; text-align: center; }
+}
+
+/* =================================
+   POPUP MODAL
+   ================================= */
+.popup-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.popup-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+.popup-content {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 40px 30px;
+  border-radius: 20px;
+  text-align: center;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(212, 168, 67, 0.1);
+  transform: translateY(20px);
+  transition: transform 0.4s ease;
+  position: relative;
+}
+.popup-overlay.active .popup-content {
+  transform: translateY(0);
+}
+.popup-close {
+  position: absolute;
+  top: 15px; right: 15px;
+  background: transparent;
+  border: none;
+  color: var(--w60);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.popup-close:hover {
+  color: var(--white);
+}
+.popup-content h3 {
+  font-size: 26px;
+  margin-bottom: 15px;
+}
+.popup-content p {
+  color: var(--w60);
+  font-size: 16px;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+.popup-content .btn-gold {
+  width: 100%;
+  display: block;
 }

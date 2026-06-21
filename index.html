@@ -174,7 +174,7 @@
         <li><a href="#services">Services</a></li>
         <li><a href="#software">Software</a></li>
         <li><a href="#about">About</a></li>
-        <li><a href="#contact" class="nav-cta">Free Consultation</a></li>
+        <li><a href="#contactForm" class="nav-cta">Free Consultation</a></li>
       </ul>
       <button class="hamburger" id="hamburger" aria-label="Menu">
         <span></span><span></span><span></span>
@@ -201,7 +201,7 @@
       </p>
       <div class="hero-actions">
         <a href="#services" id="exploreServicesBtn" class="btn-gold">Explore Services ↓</a>
-        <a href="#contact" id="consultationBtn" class="btn-outline">Get Free Consultation</a>
+        <a href="#contactForm" id="consultationBtn" class="btn-outline">Get Free Consultation</a>
       </div>
       <div class="hero-stats">
         <div class="stat-item">
@@ -317,7 +317,7 @@
             <li>State &amp; Central License</li>
             <li>License Renewal</li>
           </ul>
-          <a href="#contact" class="svc-link">Get Started →</a>
+          <a href="#contactForm" class="svc-link">Get Started →</a>
         </div>
 
         <div class="svc-card" data-delay="200">
@@ -330,7 +330,7 @@
             <li>Export Benefits Advisory</li>
             <li>DGFT Compliance</li>
           </ul>
-          <a href="#contact" class="svc-link">Get Started →</a>
+          <a href="#contactForm" class="svc-link">Get Started →</a>
         </div>
 
         <div class="svc-card" data-delay="300">
@@ -343,7 +343,7 @@
             <li>MCA Compliance</li>
             <li>Director KYC</li>
           </ul>
-          <a href="#contact" class="svc-link">Get Started →</a>
+          <a href="#contactForm" class="svc-link">Get Started →</a>
         </div>
 
         <div class="svc-card svc-featured" data-delay="150">
@@ -401,7 +401,7 @@
             <span>Live Inventory</span><span>Auto Reorder</span>
             <span>Barcode Scan</span><span>Reports</span>
           </div>
-          <a href="#contact" class="sw-btn">Request Demo →</a>
+          <a href="#contactForm" class="sw-btn">Request Demo →</a>
         </div>
 
         <div class="sw-card" data-delay="200">
@@ -431,7 +431,7 @@
             <span>Bookkeeping</span><span>Balance Sheet</span>
             <span>Bank Sync</span><span>Tax Ready</span>
           </div>
-          <a href="#contact" class="sw-btn">Request Demo →</a>
+          <a href="#contactForm" class="sw-btn">Request Demo →</a>
         </div>
 
         <div class="sw-card" data-delay="100">
@@ -446,7 +446,7 @@
             <span>Payroll Auto</span><span>PF / ESI</span>
             <span>Leave Mgmt</span><span>Payslips</span>
           </div>
-          <a href="#contact" class="sw-btn">Request Demo →</a>
+          <a href="#contactForm" class="sw-btn">Request Demo →</a>
         </div>
 
         <div class="sw-card" data-delay="200">
@@ -461,7 +461,7 @@
             <span>Deal Pipeline</span><span>Call Logs</span>
             <span>Email Sync</span><span>AI Insights</span>
           </div>
-          <a href="#contact" class="sw-btn">Request Demo →</a>
+          <a href="#contactForm" class="sw-btn">Request Demo →</a>
         </div>
 
       </div>
@@ -609,7 +609,7 @@
       <div class="footer-col">
         <h4>Contact</h4>
         <a href="mailto:contactadmin11@gmail.com">contactadmin11@gmail.com</a>
-        <a href="#contact">Free Consultation</a>
+        <a href="#contactForm">Free Consultation</a>
         <span>Mon–Sat: 9AM–7PM IST</span>
         <span>PAN India Services 🇮🇳</span>
       </div>
@@ -626,5 +626,42 @@
   <!-- Three.js (Must be before main.js) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="main.js"></script>
+
+  <!-- FREE WEBSITE POPUP MODAL -->
+  <div class="popup-overlay" id="promoPopup">
+    <div class="popup-content">
+      <button class="popup-close" id="closePopup">&times;</button>
+      <h3>🎁 Limited Time Offer!</h3>
+      <p>Get a <strong>Free Website</strong> and <strong>100 Premium Business Cards</strong> when you start your business with us.</p>
+      <a href="#contactForm" class="btn-gold" id="popupCta">Contact Us to Claim</a>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const popup = document.getElementById("promoPopup");
+      const closeBtn = document.getElementById("closePopup");
+      const ctaBtn = document.getElementById("popupCta");
+      
+      // Show popup after 3 seconds if not closed in this session
+      if (!sessionStorage.getItem("promoClosed")) {
+        setTimeout(() => {
+          popup.classList.add("active");
+        }, 3000);
+      }
+
+      function closePopup() {
+        popup.classList.remove("active");
+        sessionStorage.setItem("promoClosed", "true");
+      }
+
+      closeBtn.addEventListener("click", closePopup);
+      ctaBtn.addEventListener("click", () => {
+        closePopup();
+        // Fallback for smooth scroll if needed, though hash handles it
+        document.getElementById("contactForm").scrollIntoView({ behavior: "smooth" });
+      });
+    });
+  </script>
 </body>
 </html>
